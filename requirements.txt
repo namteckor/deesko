@@ -1,0 +1,12 @@
+os
+platform
+scapy
+ipaddress
+json
+colorama
+datetime
+requests
+getopt
+
+#csv
+#shutil
