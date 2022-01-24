@@ -513,10 +513,23 @@ class system:
             filename = 'discovery_scan_from_'+self.hostname+'_'+create_timestamp_str()
             dico_to_json(self.discovered, filename)
     
-    def discover(self, option, timeout_seconds=1, ping_sweeps='icmp', ping_count=1, tcp_udp_port=443, oui_lookup=False):
+    def discover(self, option, tcp_ports_to_scan='21-23,53,80,443,3306,8080', timeout_seconds=1, ping_sweeps='icmp', ping_count=1, tcp_udp_port=443, oui_lookup=False):
         
         # option shall be either an existing host interface name with IPv4 address or a network in CIDR notation, entered as string, ex: 'eth0'
        
+        # convert the type of provided TCP ports to scan from string to list
+        # evalue if ranges are provided
+        tcp_ports_to_scan_list = tcp_ports_to_scan.split(',')
+        
+        for to_scan_pos, to_scan in enumerate(tcp_ports_to_scan_list):
+            if '-' in str(to_scan):
+                to_scan_range = range(int(to_scan.split('-')[0]),int(to_scan.split('-')[-1])+1)                
+                for rel, item in enumerate(to_scan_range):
+                    tcp_ports_to_scan_list.insert(to_scan_pos+rel+1, int(item))                    
+                tcp_ports_to_scan_list.pop(to_scan_pos)
+            else:
+                tcp_ports_to_scan_list[to_scan_pos] = int(to_scan)
+
         ping_sweeps_list = ping_sweeps.split(',')
         # at a minimum, always do an ICMPv4 "icmp" ping sweep, so add it by default if not present
         if ('icmp' not in ping_sweeps_list) or ('ping' not in ping_sweeps_list) or ('ICMPv4' not in ping_sweeps_list) or ('ICMP' not in ping_sweeps_list):
@@ -678,16 +691,22 @@ class system:
                             self.discovered[str(network_to_scan)][discovered_ip]['mac_address'] = scapy_get_mac(str(discovered_ip))
         
         print('\t'+'Running stealthy TCP scan on discovered hosts')
+        print('\t'+'Here is the list of TCP ports that will be stealthily scanned on discovered hosts:')
+        print('\t',tcp_ports_to_scan_list)        
         for count, discovered_ip in enumerate(self.discovered[str(network_to_scan)]):            
+            self.discovered[str(network_to_scan)][str(discovered_ip)]['tcp_ports_open'] = []
+            self.discovered[str(network_to_scan)][str(discovered_ip)]['tcp_ports_open_count'] = 0
             if count > 0:
                 print('\t\t'+'***********************************************')
-            for default_port in [21, 22, 23, 53, 80, 443, 3306, 8080]:                
-                tcp_scan_result = scan_tcp_port_stealthily(str(discovered_ip), default_port, timeout_seconds=timeout_seconds)
-                self.discovered[str(network_to_scan)][str(discovered_ip)]['tcp_port_scan_'+str(default_port)] = tcp_scan_result
+            for port_to_scan in tcp_ports_to_scan_list: #[21, 22, 23, 53, 80, 443, 3306, 8080]:                
+                tcp_scan_result = scan_tcp_port_stealthily(str(discovered_ip), port_to_scan, timeout_seconds=timeout_seconds)
+                self.discovered[str(network_to_scan)][str(discovered_ip)]['tcp_port_scan_'+str(port_to_scan)] = tcp_scan_result
                 if tcp_scan_result == 'Open':
-                    print(Fore.GREEN+'\t\t'+str(discovered_ip)+':'+str(default_port)+' -> '+tcp_scan_result+Style.RESET_ALL)
+                    self.discovered[str(network_to_scan)][str(discovered_ip)]['tcp_ports_open'].append(port_to_scan)
+                    self.discovered[str(network_to_scan)][str(discovered_ip)]['tcp_ports_open_count'] += 1
+                    print(Fore.GREEN+'\t\t'+str(discovered_ip)+':'+str(port_to_scan)+' -> '+tcp_scan_result+Style.RESET_ALL)
                 else:
-                    print(Fore.YELLOW+'\t\t'+str(discovered_ip)+':'+str(default_port)+' -> '+tcp_scan_result+Style.RESET_ALL)
+                    print(Fore.YELLOW+'\t\t'+str(discovered_ip)+':'+str(port_to_scan)+' -> '+tcp_scan_result+Style.RESET_ALL)
         print('\t'+'Stealthy TCP scan on discovered hosts complete')
         print('')
         

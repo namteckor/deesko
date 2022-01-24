@@ -28,6 +28,15 @@ Below is an example of its content, this was run against a Metasploitable 2 VM f
             &ensp;&ensp;&ensp;&ensp;"oui_vendor": "Vendor Name",  
             &ensp;&ensp;&ensp;&ensp;"arping": "responded to scapy_arping()",  
             &ensp;&ensp;&ensp;&ensp;"icmpv4_ping": "responded to ICMPv4 ping",  
+            &ensp;&ensp;&ensp;&ensp;"tcp_ports_open": [
+            &ensp;&ensp;&ensp;&ensp;&ensp;21,              
+            &ensp;&ensp;&ensp;&ensp;&ensp;22,  
+            &ensp;&ensp;&ensp;&ensp;&ensp;23,  
+            &ensp;&ensp;&ensp;&ensp;&ensp;53,  
+            &ensp;&ensp;&ensp;&ensp;&ensp;80,  
+            &ensp;&ensp;&ensp;&ensp;&ensp;3306  
+            &ensp;&ensp;&ensp;&ensp;],  
+            &ensp;&ensp;&ensp;&ensp;"tcp_ports_open_count": 6,   
             &ensp;&ensp;&ensp;&ensp;"tcp_port_scan_21": "Open",  
             &ensp;&ensp;&ensp;&ensp;"tcp_port_scan_22": "Open",  
             &ensp;&ensp;&ensp;&ensp;"tcp_port_scan_23": "Open",  
