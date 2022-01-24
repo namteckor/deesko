@@ -6,16 +6,22 @@ Its goal is **not** to replace nmap or rustscan, just to showcase what can be do
 
 Usage:
 
-sudo path/to/deesko.py -d <IP address, or CIDR range, or local interface name> -t <timeout in seconds, default 1s> -s <ping sweep types, "icmp,tcp,udp", default "icmp"> -c <ping count, default 1> -p <TCP or UDP port used for TCP ping sweep, default 443> -l <to perform OUI MAC address lookup, default False>  
+sudo path/to/deesko.py -d <IP address, or CIDR range, or local interface name>  
+  -P <list of TCP ports to stealthily scan on discovered hosts, default "21,22,23,53,80,443,3306,8080">  
+  -t <timeout in seconds, default 1s>  
+  -s <ping sweep types, "icmp,tcp", default "icmp">  
+  -c <ping count, default 1>  
+  -p <TCP port used for TCP ping sweep, default 443>  
+  -l <to perform OUI MAC address lookup, default False>  
 
 Ex1: sudo ./deesko.py -d 192.168.0.0/25  
-Ex2: sudo ./deesko.py -d eth1 -t 2 -s "icmp,tcp" -c 4 -p 80 -l  
+Ex2: sudo ./deesko.py -d eth1 -P 21-23,53,80,443 -t 2 -s "icmp,tcp" -c 4 -p 80 -l  
 
 In Ex1, we are telling deesko to scan the 192.168.0.0/25 subnet with the default values for the optional switches.  
-In Ex2, we are telling deesko to scan the network attached to our local eth1 interface (assuming eth1 has a valid IP address assigned and network attached), use a timeout of 2 seconds (-t 2), perform both a default ICMP ping sweep AND an additional TCP ping sweep (-s "icmp,tcp") on port 80 (-p 80), send 4 ICMP echo requests during the ICMP ping sweep (-c 4) and attempt to lookup the MAC OUI vendor (-l) since we are scanning a local/directly-connected network. The optional TCP ping sweep is an attempt to discover hosts when/where ICMP may be blocked.  
-Increasing the timeout (-t) and/or ping count (-c) will make things slower.  
+In Ex2, we are telling deesko to scan the network attached to our local eth1 interface (assuming eth1 has a valid IP address assigned and network attached), perform a TCP stealth scan on discovered hosts on ports 21, 22, 23, 53, 80,and 443 (-P 21-23,53,80,443), use a timeout of 2 seconds (-t 2), perform both a default ICMP ping sweep AND an additional TCP ping sweep (-s "icmp,tcp") on port 80 (-p 80), send 4 ICMP echo requests during the ICMP ping sweep (-c 4) and attempt to lookup the MAC OUI vendor (-l) since we are scanning a local/directly-connected network. The optional TCP ping sweep is an attempt to discover hosts when/where ICMP may be blocked.  
+Increasing the number of ports to scan (-P), the timeout (-t) and/or the ping count (-c) will make things slower.  
 
-You may need to add "python" (ex: on Windows) or "python3" (ex: on Linux) before path/to/deesko.py, or make deesko.py executable to use without.  
+You may need to add "python" (ex: on Windows) or "python3" (ex: on Linux) before path/to/deesko.py, or make deesko.py executable to use without the preceding "python3" keyword on Linux.
 
 A .json summary file including the scan results will be created in the folder where you run deesko.py from.  
 Ex: *discovery_scan_from_HOSTNAME_YYYY-MM-DD_hhmmss.json*  
@@ -28,7 +34,7 @@ Below is an example of its content, this was run against a Metasploitable 2 VM f
             &ensp;&ensp;&ensp;&ensp;"oui_vendor": "Vendor Name",  
             &ensp;&ensp;&ensp;&ensp;"arping": "responded to scapy_arping()",  
             &ensp;&ensp;&ensp;&ensp;"icmpv4_ping": "responded to ICMPv4 ping",  
-            &ensp;&ensp;&ensp;&ensp;"tcp_ports_open": [
+            &ensp;&ensp;&ensp;&ensp;"tcp_ports_open": [  
             &ensp;&ensp;&ensp;&ensp;&ensp;21,              
             &ensp;&ensp;&ensp;&ensp;&ensp;22,  
             &ensp;&ensp;&ensp;&ensp;&ensp;23,  
@@ -44,7 +50,7 @@ Below is an example of its content, this was run against a Metasploitable 2 VM f
             &ensp;&ensp;&ensp;&ensp;"tcp_port_scan_80": "Open",  
             &ensp;&ensp;&ensp;&ensp;"tcp_port_scan_443": "Closed",  
             &ensp;&ensp;&ensp;&ensp;"tcp_port_scan_3306": "Open",  
-            &ensp;&ensp;&ensp;&ensp;"tcp_port_scan_8080": "Closed",
+            &ensp;&ensp;&ensp;&ensp;"tcp_port_scan_8080": "Closed",  
         &ensp;&ensp;&ensp;}  
     &ensp;&ensp;}  
 &ensp;}  
