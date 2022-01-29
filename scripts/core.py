@@ -7,9 +7,20 @@ disko_root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 path_to_oui_csv = os.path.join(os.path.join(disko_root_dir,'other'),'oui.csv')
 
 # Convert a dictionary to a json file
-def dico_to_json(dico, filename, rel_path = os.getcwd()):
+def dico_to_json_rel(dico, filename, rel_path = os.getcwd()):
     with open(os.path.join(rel_path,filename+'.json'), 'w') as outfile:
         json.dump(dico, outfile, indent=4)
+
+def dico_to_json(dico, full_path_output):
+    if '.json' in full_path_output:
+        open_file = full_path_output
+    else:
+        open_file = full_path_output + '.json'
+    with open(open_file, 'w') as outfile:
+        json.dump(dico, outfile, indent=4)
+    if os.path.isfile(open_file):        
+        print('')
+        print('\t'+'[INFO] Successfully saved scan results to '+open_file)      
 
 # Function to create a timestamp string at a given moment, can be used to timestamp log files by including in filename and keeping multiple version over time
 def create_timestamp_str(str_ts_format = '%Y-%m-%d_%H%M%S'):
@@ -22,6 +33,7 @@ def load_oui_csv():
     if os.path.isfile(path_to_oui_csv):        
         print('')
         print('\t'+'[INFO] Found oui.csv in '+os.path.dirname(path_to_oui_csv)+', no need to download.')
+        print('')
     else:
         print('')
         print('\t'+'[INFO] oui.csv not found in '+os.path.dirname(path_to_oui_csv)+', starting download...')
@@ -508,12 +520,15 @@ class system:
             print(Style.RESET_ALL)
             return None
     
-    def export(self,export_option):
-        if export_option in ['discovered','discovery','scan','scans']:
-            filename = 'discovery_scan_from_'+self.hostname+'_'+create_timestamp_str()
-            dico_to_json(self.discovered, filename)
+    def export(self,export_option,full_path_output=None):
+        if export_option in ['discovered','discovery','scan','scans','deesko']:
+            if full_path_output is None:
+                export_to = os.path.join(os.getcwd(),'deesko_scan_from_'+self.hostname+'_'+create_timestamp_str())
+            else:
+                export_to = full_path_output
+            dico_to_json(self.discovered, export_to)        
     
-    def discover(self, option, tcp_ports_to_scan='21-23,53,80,443,3306,8080', timeout_seconds=1, ping_sweeps='icmp', ping_count=1, tcp_udp_port=443, oui_lookup=False):
+    def discover(self, option, tcp_ports_to_scan='21-23,53,80,443,3306,8080', timeout_seconds=1, ping_sweeps='icmp', ping_count=1, tcp_udp_port=443, oui_lookup=False, output=None, verbose=False):
         
         # option shall be either an existing host interface name with IPv4 address or a network in CIDR notation, entered as string, ex: 'eth0'
        
@@ -528,7 +543,7 @@ class system:
                     tcp_ports_to_scan_list.insert(to_scan_pos+rel+1, int(item))                    
                 tcp_ports_to_scan_list.pop(to_scan_pos)
             else:
-                tcp_ports_to_scan_list[to_scan_pos] = int(to_scan)
+                tcp_ports_to_scan_list[to_scan_pos] = int(to_scan)    
 
         ping_sweeps_list = ping_sweeps.split(',')
         # at a minimum, always do an ICMPv4 "icmp" ping sweep, so add it by default if not present
@@ -580,7 +595,10 @@ class system:
         print('')
         
         if str(network_to_scan) not in self.discovered:
-            self.discovered[str(network_to_scan)] = {}
+            self.discovered[str(network_to_scan)] = {
+                'discovered_hosts_count': 0,
+                'discovered_hosts_details': {}
+            }
         
         # if we are dealing with a directly connected network or interface, start with an arping scan
         if is_connected_network:
@@ -589,7 +607,7 @@ class system:
             # let's loop over the responses/answers we received to analyze which hosts are online
             for item in arping_results[0]: # arping_results[0] is for the answers, [1] would be for the unanswers
                 # item[1] is for the repsonse we received; [0] would be for the request we sent
-                self.discovered[str(network_to_scan)][item[1].sprintf('%ARP.psrc%')] = {
+                self.discovered[str(network_to_scan)]['discovered_hosts_details'][item[1].sprintf('%ARP.psrc%')] = {
                     'ipv4_address': item[1].sprintf('%ARP.psrc%'),
                     'mac_address':item[1].sprintf('%Ether.src%'),
                     'oui_vendor': None,
@@ -610,10 +628,10 @@ class system:
             )
                
             for online_ip in ping_sweep_results['online']:
-                if online_ip in self.discovered[str(network_to_scan)]:
-                    self.discovered[str(network_to_scan)][online_ip]['icmpv4_ping'] = 'responded to ICMPv4 ping'
+                if online_ip in self.discovered[str(network_to_scan)]['discovered_hosts_details']:
+                    self.discovered[str(network_to_scan)]['discovered_hosts_details'][online_ip]['icmpv4_ping'] = 'responded to ICMPv4 ping'
                 else:
-                    self.discovered[str(network_to_scan)][online_ip] = {
+                    self.discovered[str(network_to_scan)]['discovered_hosts_details'][online_ip] = {
                         'ipv4_address': online_ip,
                         'mac_address': None,
                         'oui_vendor': None,
@@ -655,10 +673,10 @@ class system:
                     )
                 for item in tcp_ping_results[0]:   
                     item_ip = str(item[1].sprintf('%IP.src%'))
-                    if item_ip in self.discovered[str(network_to_scan)]:
-                        self.discovered[str(network_to_scan)][item_ip]['tcp_ping'] = 'responded to TCP ping on port '+str(tcp_udp_port)
+                    if item_ip in self.discovered[str(network_to_scan)]['discovered_hosts_details']:
+                        self.discovered[str(network_to_scan)]['discovered_hosts_details'][item_ip]['tcp_ping'] = 'responded to TCP ping on port '+str(tcp_udp_port)
                     else:
-                        self.discovered[str(network_to_scan)][item_ip] = {
+                        self.discovered[str(network_to_scan)]['discovered_hosts_details'][item_ip] = {
                             'ipv4_address': item_ip,
                             'mac_address': None,
                             'oui_vendor': None,
@@ -668,8 +686,8 @@ class system:
                         }
                 for item in tcp_ping_results[1]:
                     item_ip = str(item[0].sprintf('%IP.dst%'))
-                    if item_ip in self.discovered[str(network_to_scan)]:
-                        self.discovered[str(network_to_scan)][item_ip]['tcp_ping'] = 'did NOT respond to TCP ping on port '+str(tcp_udp_port)
+                    if item_ip in self.discovered[str(network_to_scan)]['discovered_hosts_details']:
+                        self.discovered[str(network_to_scan)]['discovered_hosts_details'][item_ip]['tcp_ping'] = 'did NOT respond to TCP ping on port '+str(tcp_udp_port)
                         
             print('\t'+'TCP ping sweep complete')
             print('')
@@ -680,40 +698,73 @@ class system:
         
         # if we are scanning a range, and some discovered IP addresses belong to directly connected networks, then issue ARP requests to get the MAC address
         if is_range:
-            for discovered_ip in self.discovered[str(network_to_scan)]:
+            for discovered_ip in self.discovered[str(network_to_scan)]['discovered_hosts_details']:
                 for connected_net in list(self.networks.values()):
                     if ipaddress.ip_address(discovered_ip) in connected_net.hosts():
                         print('\t'+'[INFO] '+'discovered IP address '+str(discovered_ip)+' is local, trying to get MAC address...')
                         print('')
                         if scapy_get_mac(str(discovered_ip)) is None:
-                            self.discovered[str(network_to_scan)][discovered_ip]['mac_address'] = arp_cache_lookup(str(discovered_ip))
+                            self.discovered[str(network_to_scan)]['discovered_hosts_details'][discovered_ip]['mac_address'] = arp_cache_lookup(str(discovered_ip))
                         else:
-                            self.discovered[str(network_to_scan)][discovered_ip]['mac_address'] = scapy_get_mac(str(discovered_ip))
+                            self.discovered[str(network_to_scan)]['discovered_hosts_details'][discovered_ip]['mac_address'] = scapy_get_mac(str(discovered_ip))
         
         print('\t'+'Running stealthy TCP scan on discovered hosts')
-        print('\t'+'Here is the list of TCP ports that will be stealthily scanned on discovered hosts:')
-        print('\t',tcp_ports_to_scan_list)        
-        for count, discovered_ip in enumerate(self.discovered[str(network_to_scan)]):            
-            self.discovered[str(network_to_scan)][str(discovered_ip)]['tcp_ports_open'] = []
-            self.discovered[str(network_to_scan)][str(discovered_ip)]['tcp_ports_open_count'] = 0
+        print('\t',str(len(tcp_ports_to_scan_list)),'ports to scan per discovered host')                
+
+        for count, discovered_ip in enumerate(self.discovered[str(network_to_scan)]['discovered_hosts_details']):       
+
+            closed_and_filtered_ports = []
+            closed_and_filtered_ports_str = ''
+
+            self.discovered[str(network_to_scan)]['discovered_hosts_details'][str(discovered_ip)]['tcp_ports_open_count'] = 0
+            self.discovered[str(network_to_scan)]['discovered_hosts_details'][str(discovered_ip)]['tcp_ports_open'] = []
+            self.discovered[str(network_to_scan)]['discovered_hosts_details'][str(discovered_ip)]['tcp_ports_closed_or_filtered_count'] = 0
+            self.discovered[str(network_to_scan)]['discovered_hosts_details'][str(discovered_ip)]['tcp_ports_closed_or_filtered'] = ''         
             if count > 0:
                 print('\t\t'+'***********************************************')
             for port_to_scan in tcp_ports_to_scan_list: #[21, 22, 23, 53, 80, 443, 3306, 8080]:                
                 tcp_scan_result = scan_tcp_port_stealthily(str(discovered_ip), port_to_scan, timeout_seconds=timeout_seconds)
-                self.discovered[str(network_to_scan)][str(discovered_ip)]['tcp_port_scan_'+str(port_to_scan)] = tcp_scan_result
+                #self.discovered[str(network_to_scan)]['discovered_hosts_details'][str(discovered_ip)]['tcp_port_scan_'+str(port_to_scan)] = tcp_scan_result
                 if tcp_scan_result == 'Open':
-                    self.discovered[str(network_to_scan)][str(discovered_ip)]['tcp_ports_open'].append(port_to_scan)
-                    self.discovered[str(network_to_scan)][str(discovered_ip)]['tcp_ports_open_count'] += 1
+                    self.discovered[str(network_to_scan)]['discovered_hosts_details'][str(discovered_ip)]['tcp_ports_open'].append(port_to_scan)
+                    self.discovered[str(network_to_scan)]['discovered_hosts_details'][str(discovered_ip)]['tcp_ports_open_count'] += 1
                     print(Fore.GREEN+'\t\t'+str(discovered_ip)+':'+str(port_to_scan)+' -> '+tcp_scan_result+Style.RESET_ALL)
                 else:
-                    print(Fore.YELLOW+'\t\t'+str(discovered_ip)+':'+str(port_to_scan)+' -> '+tcp_scan_result+Style.RESET_ALL)
+                    self.discovered[str(network_to_scan)]['discovered_hosts_details'][str(discovered_ip)]['tcp_ports_closed_or_filtered_count'] += 1
+                    closed_and_filtered_ports.append(port_to_scan)
+                    if verbose: #else:
+                        print(Fore.YELLOW+'\t\t'+str(discovered_ip)+':'+str(port_to_scan)+' -> '+tcp_scan_result+Style.RESET_ALL)
+                        
+            for cfpi, closed_or_filtered_port in enumerate(closed_and_filtered_ports):                
+                if cfpi == 0:
+                    closed_and_filtered_ports_str = str(closed_or_filtered_port)
+                    last_port = closed_or_filtered_port
+                else:
+                    delta_to_last_port = closed_or_filtered_port - last_port
+                    if delta_to_last_port == 1:
+                        list_items = closed_and_filtered_ports_str.split(',')
+                        last_item = list_items[-1]
+                        if '-' in last_item:
+                            last_item = last_item.split('-')[0]+'-'+str(closed_or_filtered_port)                            
+                        else:
+                            last_item = last_item+'-'+str(closed_or_filtered_port)
+                        list_items[-1] = last_item
+                        closed_and_filtered_ports_str = ','.join(list_items)
+                    else:
+                        closed_and_filtered_ports_str = closed_and_filtered_ports_str + ',' + str(closed_or_filtered_port)
+                    last_port = closed_or_filtered_port
+            self.discovered[str(network_to_scan)]['discovered_hosts_details'][str(discovered_ip)]['tcp_ports_closed_or_filtered'] = closed_and_filtered_ports_str
+
         print('\t'+'Stealthy TCP scan on discovered hosts complete')
         print('')
         
-        for discovered_ip in self.discovered[str(network_to_scan)]:
-            self.discovered[str(network_to_scan)][discovered_ip]['oui_vendor'] = lookup_mac_address_oui_details(
-                    self.discovered[str(network_to_scan)][discovered_ip]['mac_address'],
+        for discovered_ip in self.discovered[str(network_to_scan)]['discovered_hosts_details']:
+            self.discovered[str(network_to_scan)]['discovered_hosts_details'][discovered_ip]['oui_vendor'] = lookup_mac_address_oui_details(
+                    self.discovered[str(network_to_scan)]['discovered_hosts_details'][discovered_ip]['mac_address'],
                     self.oui_lookup_dictionary
                 )
-    
-        
+
+            self.discovered[str(network_to_scan)]['discovered_hosts_count'] += 1
+
+        if output is not None:
+            self.export('deesko',output)
