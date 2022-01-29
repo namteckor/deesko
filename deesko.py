@@ -15,7 +15,7 @@ try:
     opts, args = getopt.getopt(argv,short_options,long_options)
 except getopt.error as err:
     print('ERROR!')
-    print('Usage: deesko.py -d <what to deesKover: IP address, CIDR range or local interface name>')
+    print('Usage: deesko.py -d <IP address, or CIDR range, or local interface name>')
     print('\t'+'-P <string of comma-separated ports, or range>')
     print('\t'+'-o <full path to output file for the downloaded scan report in .json format, default False (no report)>')
     print('\t'+'-t <timeout (optional, default 1s)>')
@@ -35,7 +35,7 @@ if ('-d' not in list_of_options_passed) and ('--discover' not in list_of_options
     print('ERROR!')
     print('Missing required argument -d or --discover <10.0.0.0/24 or interface name>')
     print('')
-    print('Usage: deesko.py -d <what to deesKover: IP address, CIDR range or local interface name>')
+    print('Usage: deesko.py -d <IP address, or CIDR range, or local interface name>')
     print('\t'+'-P <string of comma-separated ports, or range>')
     print('\t'+'-o <full path to output file for the downloaded scan report in .json format, default False (no report)>')
     print('\t'+'-t <timeout (optional, default 1s)>')
@@ -85,7 +85,7 @@ for opt, arg in opts:
         be_verbose = True
     else:
         print('ERROR!')
-        print('Usage: deesko.py -d <what to deesKover: IP address, CIDR range or local interface name>')
+        print('Usage: deesko.py -d <IP address, or CIDR range, or local interface name>')
         print('\t'+'-P <string of comma-separated ports, or range>')
         print('\t'+'-o <full path to output file for the downloaded scan report in .json format, default False (no report)>')
         print('\t'+'-t <timeout (optional, default 1s)>')

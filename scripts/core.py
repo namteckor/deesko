@@ -766,5 +766,6 @@ class system:
 
             self.discovered[str(network_to_scan)]['discovered_hosts_count'] += 1
 
+        # if the -o switch was given, then export the results
         if output is not None:
             self.export('deesko',output)
