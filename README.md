@@ -6,15 +6,15 @@ Its goal is **not** to replace nmap or rustscan, just to showcase what can be do
 
 Usage:
 
-sudo path/to/deesko.py -d <IP address, or CIDR range, or local interface name>  
-  -P <list of TCP ports to stealthily scan on discovered hosts, default "21-23,53,80,443,3306,8080">  
-  -o <output file - full path to output file for the downloaded scan report in .json format, default False (no report)>  
-  -t <timeout in seconds, default 1s>  
-  -s <ping sweep types, "icmp,tcp", default "icmp">  
-  -c <ping count, default 1>  
-  -p <TCP port used for TCP ping sweep, default 443>  
-  -l <to perform OUI MAC address lookup, default False>  
-  -v <to be verbose and show "Closed" and "Filtered" ports, default False>  
+&ensp;sudo path/to/deesko.py -d <IP address, or CIDR range, or local interface name>  
+  &ensp;&ensp;-P <list of TCP ports to stealthily scan on discovered hosts, default "21-23,53,80,443,3306,8080">  
+  &ensp;&ensp;-o <output file - full path to output file for the downloaded scan report in .json format, default False (no report)>  
+  &ensp;&ensp;-t <timeout in seconds, default 1s>  
+  &ensp;&ensp;-s <ping sweep types, "icmp,tcp", default "icmp">  
+  &ensp;&ensp;-c <ping count, default 1>  
+  &ensp;&ensp;-p <TCP port used for TCP ping sweep, default 443>  
+  &ensp;&ensp;-l <to perform OUI MAC address lookup, default False>  
+  &ensp;&ensp;-v <to be verbose and show "Closed" and "Filtered" ports, default False>  
 
 Ex1: sudo ./deesko.py -d 192.168.0.0/25  
 Ex2: sudo ./deesko.py -d eth1 -P 21-23,53,80,443 -o scan_results.json -t 2 -s "icmp,tcp" -c 4 -p 80 -l -v   
