@@ -6,6 +6,7 @@ from colorama import Fore, Back, Style
 disko_root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 path_to_oui_csv = os.path.join(os.path.join(disko_root_dir,'other'),'oui.csv')
 path_to_nmap_os_fingerprints = os.path.join(os.path.join(disko_root_dir,'other'),'nmap-os-fingerprints')
+path_to_p0f_base = os.path.join(os.path.join(disko_root_dir,'other'),'p0f.fp')
 
 # Convert a dictionary to a json file
 def dico_to_json_rel(dico, filename, rel_path = os.getcwd()):
@@ -77,6 +78,26 @@ def load_nmap_os_fingerprints():
             scapy.conf.nmap_base = path_to_nmap_os_fingerprints
         else:
             print('\t'+'[INFO] !!! nmap-os-fingerprints download failed !!!')
+
+def load_p0f_base():
+    if os.path.isfile(path_to_p0f_base):        
+        print('')
+        print('\t'+'[INFO] Found p0f.fp in '+os.path.dirname(path_to_p0f_base)+', no need to download.')
+        print('')
+        scapy.conf.p0f_base = path_to_p0f_base
+    else:
+        print('')
+        print('\t'+'[INFO] p0f.fp not found in '+os.path.dirname(path_to_p0f_base)+', starting download...')
+        print('')
+        p0f_fp = requests.get('https://raw.githubusercontent.com/p0f/p0f/master/p0f.fp') #'https://github.com/p0f/p0f/blob/master/p0f.fp'
+        p0f_fp_file = open(path_to_p0f_base, 'w', encoding='utf-8', newline = '\n')
+        p0f_fp_file.write(p0f_fp.text)
+        p0f_fp_file.close()
+        if os.path.isfile(path_to_p0f_base):
+            print('\t'+'[INFO] ... p0f.fp download successful!')
+            scapy.conf.p0f_base = path_to_p0f_base
+        else:
+            print('\t'+'[INFO] !!! p0f.fp download failed !!!')
 
 def lookup_mac_address_oui_details(mac_address, oui_lookup_dictionary):    
     if (mac_address is None) or (mac_address in ['na', 'n/a', 'NA', 'N/A']):
@@ -638,11 +659,12 @@ class system:
                 # item[1] is for the repsonse we received; [0] would be for the request we sent
                 self.discovered[str(network_to_scan)]['discovered_hosts_details'][item[1].sprintf('%ARP.psrc%')] = {
                     'ipv4_address': item[1].sprintf('%ARP.psrc%'),
+                    'os': 'OS fingerprinting not run',
                     'mac_address':item[1].sprintf('%Ether.src%'),
                     'oui_vendor': None,
                     'arping': 'responded to scapy_arping()'
                 }
-                self.discovered[str(network_to_scan)]['discovered_hosts_summary'][item[1].sprintf('%ARP.psrc%')] = item[1].sprintf('%ARP.psrc%')
+                self.discovered[str(network_to_scan)]['discovered_hosts_summary'][item[1].sprintf('%ARP.psrc%')] = 'OS fingerprinting not run' #item[1].sprintf('%ARP.psrc%')
             print('\t'+'scapy_arping() complete')
             print('')
 
@@ -663,6 +685,7 @@ class system:
                 else:
                     self.discovered[str(network_to_scan)]['discovered_hosts_details'][online_ip] = {
                         'ipv4_address': online_ip,
+                        'os': 'OS fingerprinting not run',
                         'mac_address': None,
                         'oui_vendor': None,
                         'arping': None,                        
@@ -709,6 +732,7 @@ class system:
                     else:
                         self.discovered[str(network_to_scan)]['discovered_hosts_details'][item_ip] = {
                             'ipv4_address': item_ip,
+                            'os': 'OS fingerprinting not run',
                             'mac_address': None,
                             'oui_vendor': None,
                             'arping': None,
@@ -794,6 +818,11 @@ class system:
             #print('\t[DEBUG] scapy.conf.nmap_base', scapy.conf.nmap_base)
             load_nmap_os_fingerprints()
             #print('\t[DEBUG] scapy.conf.nmap_base', scapy.conf.nmap_base)
+            #scapy.load_module('p0f')
+            #print('\t[DEBUG] scapy.conf.p0f_base', scapy.conf.p0f_base)
+            #load_p0f_base()
+            #print('\t[DEBUG] scapy.conf.p0f_base', scapy.conf.p0f_base)
+
             
             
         for discovered_ip in self.discovered[str(network_to_scan)]['discovered_hosts_details']:
@@ -807,8 +836,8 @@ class system:
             if active_os_fingerprinting:
                 test_os = self.run_nmap_os_fingerprint(str(discovered_ip))
                 #print('\t[DEBUG]',test_os)
-                self.discovered[str(network_to_scan)]['discovered_hosts_summary'][discovered_ip] = str(test_os)
-                
+                self.discovered[str(network_to_scan)]['discovered_hosts_summary'][discovered_ip] = {'scapy-nmap_fp': str(test_os)}
+                self.discovered[str(network_to_scan)]['discovered_hosts_details'][discovered_ip]['os'] = {'scapy-nmap_fp': str(test_os)}
 
         # if the -o switch was given, then export the results
         if output is not None:

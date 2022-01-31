@@ -30,9 +30,13 @@ Below is an example of using the -o output switch ("scan_results.json"), this wa
   &ensp;{  
     &ensp;&ensp;"192.168.0.0/25": {  
         &ensp;&ensp;&ensp;"discovered_hosts_count": 1,  
+        &ensp;&ensp;&ensp;"discovered_hosts_summary": {  
+        &ensp;&ensp;&ensp;&ensp;"192.168.0.100": "OS fingerprinting not run"  
+        &ensp;&ensp;&ensp;},  
         &ensp;&ensp;&ensp;"discovered_hosts_details": {  
         &ensp;&ensp;&ensp;&ensp;"192.168.0.100": {  
             &ensp;&ensp;&ensp;&ensp;&ensp;"ipv4_address": "192.168.0.100",  
+            &ensp;&ensp;&ensp;&ensp;&ensp;"os": "OS fingerprinting not run",  
             &ensp;&ensp;&ensp;&ensp;&ensp;"mac_address": "00:00:00:00:00:00",  
             &ensp;&ensp;&ensp;&ensp;&ensp;"oui_vendor": "Vendor Name",  
             &ensp;&ensp;&ensp;&ensp;&ensp;"arping": "responded to scapy_arping()",  
