@@ -7,7 +7,8 @@ Its goal is **not** to replace nmap or rustscan, just to showcase what can be do
 Usage:
 
 &ensp;sudo path/to/deesko.py -d <IP address, or CIDR range, or local interface name>  
-  &ensp;&ensp;-P <list of TCP ports to stealthily scan on discovered hosts, default "21-23,53,80,443,3306,8080">  
+  &ensp;&ensp;-P <list of TCP ports to stealthily scan on discovered hosts, default "21-23,53,80,389,443,502,636,990,3306,3389,5432,8080">  
+  &ensp;&ensp;-A <to perform active OS fingerprinting on discovered live hosts using the load_module("nmap") utility, default False>  
   &ensp;&ensp;-o <output file - full path to output file for the downloaded scan report in .json format, default False (no report)>  
   &ensp;&ensp;-t <timeout in seconds, default 1s>  
   &ensp;&ensp;-s <ping sweep types, "icmp,tcp", default "icmp">  

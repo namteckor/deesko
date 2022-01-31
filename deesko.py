@@ -1,15 +1,22 @@
 #!/usr/bin/python3
 
-import sys, getopt, os
+import sys, getopt, os, datetime
 from scripts import core
-import pdb
+
+time_format = '%Y-%m-%d %H:%M:%S%z'
+
+start_local = datetime.datetime.now().astimezone()
+start_utc = start_local.astimezone(datetime.timezone.utc)
+print('')
+print('\t[INFO] start_local\t=', start_local.strftime(time_format))
+print('\t[INFO] start_utc\t=', start_utc.strftime(time_format))
 
 host = core.system()
 
 argv = sys.argv[1:]
 
-short_options = 'd:P:t:s:c:p:o:lv' 
-long_options =  ['discover=','Ports=','timeout=','sweeps=','count=','port=','output=','lookup','verbose']
+short_options = 'd:P:At:s:c:p:o:lv' 
+long_options =  ['discover=','Ports=','Active-OS-Fingerprinting','timeout=','sweeps=','count=','port=','output=','lookup','verbose']
 
 try:
     opts, args = getopt.getopt(argv,short_options,long_options)
@@ -17,6 +24,7 @@ except getopt.error as err:
     print('ERROR!')
     print('Usage: deesko.py -d <IP address, or CIDR range, or local interface name>')
     print('\t'+'-P <string of comma-separated ports, or range>')
+    print('\t'+'-A <to perform active OS fingerprinting on discovered live hosts using the load_module("nmap") utility, default False>')
     print('\t'+'-o <full path to output file for the downloaded scan report in .json format, default False (no report)>')
     print('\t'+'-t <timeout (optional, default 1s)>')
     print('\t'+'-s <ping sweep types, default "icmp">')
@@ -37,6 +45,7 @@ if ('-d' not in list_of_options_passed) and ('--discover' not in list_of_options
     print('')
     print('Usage: deesko.py -d <IP address, or CIDR range, or local interface name>')
     print('\t'+'-P <string of comma-separated ports, or range>')
+    print('\t'+'-A <to perform active OS fingerprinting on discovered live hosts using the load_module("nmap") utility, default False>')
     print('\t'+'-o <full path to output file for the downloaded scan report in .json format, default False (no report)>')
     print('\t'+'-t <timeout (optional, default 1s)>')
     print('\t'+'-s <ping sweep types, default "icmp">')
@@ -46,16 +55,19 @@ if ('-d' not in list_of_options_passed) and ('--discover' not in list_of_options
     print('\t'+'-v <to be verbose and show "Closed" and "Filtered" ports, default False>')
     print('')
     print('Local interface options to scan a local/directly-connected network:')
-    print('\t'+'+---------------------------------------+-----------------------+')
-    print('\t| '+'Local interface name'+'\t\t\t| '+'CIDR Range'+'\t\t|')
-    print('\t'+'+---------------------------------------+-----------------------+')
+    print('\t'+'+-----------------------------------------------+-----------------------+')
+    print('\t| '+'Local interface name'+'\t\t\t\t| '+'CIDR Range'+'\t\t|')
+    print('\t'+'+-----------------------------------------------+-----------------------+')
     for local_interface in host.networks:
-        print('\t| '+str(local_interface)+'\t\t\t\t\t| '+str(host.networks[local_interface])+'   \t|')
-    print('\t'+'+---------------------------------------+-----------------------+')
+        #print('\t| '+str(local_interface)+'\t\t\t\t\t| '+str(host.networks[local_interface])+'   \t|')
+        print('\t| '+'{:<45}'.format(str(local_interface))+'\t| '+'{:<18}'.format(str(host.networks[local_interface]))+'\t|')
+    print('\t'+'+-----------------------------------------------+-----------------------+')
     sys.exit()
+    
 
 # Set some defaults for the optional arguments
-target_tcp_ports_to_scan = '21,22,23,53,80,443,3306,8080'
+target_tcp_ports_to_scan = None
+active_os_fingerprinting = False
 target_timeout_seconds = 1
 target_ping_sweep_types = 'icmp'
 target_ping_count = 1
@@ -69,6 +81,8 @@ for opt, arg in opts:
         target_to_discover = str(arg)
     elif opt in ('-P', '--Ports'):
         target_tcp_ports_to_scan = str(arg)
+    elif opt in ('-A', '--Active-OS-Fingerprinting'):
+        active_os_fingerprinting = True
     elif opt in ('-o', '--output'):
         output_file_name = str(arg)
     elif opt in ('-t', '--timeout'):
@@ -87,6 +101,7 @@ for opt, arg in opts:
         print('ERROR!')
         print('Usage: deesko.py -d <IP address, or CIDR range, or local interface name>')
         print('\t'+'-P <string of comma-separated ports, or range>')
+        print('\t'+'-A <to perform active OS fingerprinting on discovered live hosts using the load_module("nmap") utility, default False>')
         print('\t'+'-o <full path to output file for the downloaded scan report in .json format, default False (no report)>')
         print('\t'+'-t <timeout (optional, default 1s)>')
         print('\t'+'-s <ping sweep types, default "icmp">')
@@ -107,6 +122,7 @@ for opt, arg in opts:
 host.discover(
         option = target_to_discover,
         tcp_ports_to_scan = target_tcp_ports_to_scan,
+        active_os_fingerprinting = active_os_fingerprinting,
         timeout_seconds = target_timeout_seconds,
         ping_sweeps = target_ping_sweep_types, 
         ping_count = target_ping_count, 
@@ -115,3 +131,26 @@ host.discover(
         output = output_file_name,
         verbose = be_verbose
     )
+    
+end_local = datetime.datetime.now().astimezone()
+end_utc = end_local.astimezone(datetime.timezone.utc)
+duration = end_local-start_local
+duration_tracker = duration.seconds
+duration_days = duration.seconds // 86400
+duration_tracker = duration_tracker - (duration_days*86400)
+duration_hours = duration_tracker // 3600
+duration_tracker = duration_tracker - (duration_hours*3600)
+duration_minutes = duration_tracker // 60
+duration_tracker = duration_tracker - (duration_minutes*60)
+duration_seconds = duration_tracker
+duration_message = str(duration_days)+ ' days '+str(duration_hours)+' hours '+str(duration_minutes)+' minutes '+str(duration_seconds)+' seconds'
+
+print('')
+print('\t[INFO] start_local\t=', start_local.strftime(time_format))
+print('\t[INFO] end_local\t=', end_local.strftime(time_format))
+print('\t*****')
+print('\t[INFO] start_utc\t=', start_utc.strftime(time_format))    
+print('\t[INFO] end_utc\t\t=', end_utc.strftime(time_format))
+print('\t*****')
+print('\t[INFO] duration\t=',duration)
+print('\t[INFO] duration\t=',duration_message)

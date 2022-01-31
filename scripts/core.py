@@ -5,6 +5,7 @@ from colorama import Fore, Back, Style
 
 disko_root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 path_to_oui_csv = os.path.join(os.path.join(disko_root_dir,'other'),'oui.csv')
+path_to_nmap_os_fingerprints = os.path.join(os.path.join(disko_root_dir,'other'),'nmap-os-fingerprints')
 
 # Convert a dictionary to a json file
 def dico_to_json_rel(dico, filename, rel_path = os.getcwd()):
@@ -56,6 +57,26 @@ def load_oui_csv():
         no_dash_oui = line_split[1]
         parsed_ouis[no_dash_oui[0:2]+'-'+no_dash_oui[2:4]+'-'+no_dash_oui[4:6]] = line_split[2].replace('"','')
     return parsed_ouis
+
+def load_nmap_os_fingerprints():
+    if os.path.isfile(path_to_nmap_os_fingerprints):        
+        print('')
+        print('\t'+'[INFO] Found nmap-os-fingerprints in '+os.path.dirname(path_to_nmap_os_fingerprints)+', no need to download.')
+        print('')
+        scapy.conf.nmap_base = path_to_nmap_os_fingerprints
+    else:
+        print('')
+        print('\t'+'[INFO] nmap-os-fingerprints not found in '+os.path.dirname(path_to_nmap_os_fingerprints)+', starting download...')
+        print('')
+        nmap_os_fingerprints = requests.get('https://raw.githubusercontent.com/nmap/nmap/9efe1892/nmap-os-fingerprints')
+        nmap_os_fingerprints_file = open(path_to_nmap_os_fingerprints, 'w', encoding='utf-8', newline = '\n')
+        nmap_os_fingerprints_file.write(nmap_os_fingerprints.text)
+        nmap_os_fingerprints_file.close()
+        if os.path.isfile(path_to_nmap_os_fingerprints):
+            print('\t'+'[INFO] ... nmap-os-fingerprints download successful!')
+            scapy.conf.nmap_base = path_to_nmap_os_fingerprints
+        else:
+            print('\t'+'[INFO] !!! nmap-os-fingerprints download failed !!!')
 
 def lookup_mac_address_oui_details(mac_address, oui_lookup_dictionary):    
     if (mac_address is None) or (mac_address in ['na', 'n/a', 'NA', 'N/A']):
@@ -327,6 +348,7 @@ class system:
         self.discovered = {}
         # Parse and load an OUI lookup dictionary content in memory for re-use and multiple lookup
         self.oui_lookup_dictionary = load_oui_csv() #load_oui_txt()
+        self.default_tcp_ports = '21-23,53,80,389,443,502,636,990,3306,3389,5432,8080'
             
     def ip_config(self):
         if self.system == 'Windows':
@@ -528,10 +550,16 @@ class system:
                 export_to = full_path_output
             dico_to_json(self.discovered, export_to)        
     
-    def discover(self, option, tcp_ports_to_scan='21-23,53,80,443,3306,8080', timeout_seconds=1, ping_sweeps='icmp', ping_count=1, tcp_udp_port=443, oui_lookup=False, output=None, verbose=False):
+    def run_nmap_os_fingerprint(self,target_ip_str):
+        rv = nmap_fp(target_ip_str,oport=443,cport=1)
+        return rv
+    
+    def discover(self, option, tcp_ports_to_scan=None, active_os_fingerprinting=False, timeout_seconds=1, ping_sweeps='icmp', ping_count=1, tcp_udp_port=443, oui_lookup=False, output=None, verbose=False):
         
         # option shall be either an existing host interface name with IPv4 address or a network in CIDR notation, entered as string, ex: 'eth0'
        
+        if tcp_ports_to_scan is None:
+            tcp_ports_to_scan = self.default_tcp_ports
         # convert the type of provided TCP ports to scan from string to list
         # evalue if ranges are provided
         tcp_ports_to_scan_list = tcp_ports_to_scan.split(',')
@@ -597,6 +625,7 @@ class system:
         if str(network_to_scan) not in self.discovered:
             self.discovered[str(network_to_scan)] = {
                 'discovered_hosts_count': 0,
+                'discovered_hosts_summary': {},
                 'discovered_hosts_details': {}
             }
         
@@ -613,6 +642,7 @@ class system:
                     'oui_vendor': None,
                     'arping': 'responded to scapy_arping()'
                 }
+                self.discovered[str(network_to_scan)]['discovered_hosts_summary'][item[1].sprintf('%ARP.psrc%')] = item[1].sprintf('%ARP.psrc%')
             print('\t'+'scapy_arping() complete')
             print('')
 
@@ -638,6 +668,7 @@ class system:
                         'arping': None,                        
                         'icmpv4_ping': 'responded to ICMPv4 ping'
                     }
+                    self.discovered[str(network_to_scan)]['discovered_hosts_summary'][online_ip] = online_ip
         print('')          
         if ('tcp' in ping_sweeps_list) or ('TCP' in ping_sweeps_list):
             print('\t'+'Running TCP ping sweep for target IP range '+str(network_to_scan))
@@ -758,6 +789,13 @@ class system:
         print('\t'+'Stealthy TCP scan on discovered hosts complete')
         print('')
         
+        if active_os_fingerprinting:
+            scapy.load_module('nmap')
+            #print('\t[DEBUG] scapy.conf.nmap_base', scapy.conf.nmap_base)
+            load_nmap_os_fingerprints()
+            #print('\t[DEBUG] scapy.conf.nmap_base', scapy.conf.nmap_base)
+            
+            
         for discovered_ip in self.discovered[str(network_to_scan)]['discovered_hosts_details']:
             self.discovered[str(network_to_scan)]['discovered_hosts_details'][discovered_ip]['oui_vendor'] = lookup_mac_address_oui_details(
                     self.discovered[str(network_to_scan)]['discovered_hosts_details'][discovered_ip]['mac_address'],
@@ -765,6 +803,12 @@ class system:
                 )
 
             self.discovered[str(network_to_scan)]['discovered_hosts_count'] += 1
+            
+            if active_os_fingerprinting:
+                test_os = self.run_nmap_os_fingerprint(str(discovered_ip))
+                #print('\t[DEBUG]',test_os)
+                self.discovered[str(network_to_scan)]['discovered_hosts_summary'][discovered_ip] = str(test_os)
+                
 
         # if the -o switch was given, then export the results
         if output is not None:
