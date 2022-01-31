@@ -763,8 +763,8 @@ class system:
                         else:
                             self.discovered[str(network_to_scan)]['discovered_hosts_details'][discovered_ip]['mac_address'] = scapy_get_mac(str(discovered_ip))
         
-        print('\t'+'Running stealthy TCP scan on discovered hosts')
-        print('\t',str(len(tcp_ports_to_scan_list)),'ports to scan per discovered host')                
+        print('\t'+'Running stealthy TCP scan on '+str(len(self.discovered[str(network_to_scan)]['discovered_hosts_details']))+' discovered host(s)')
+        print('\t','with',str(len(tcp_ports_to_scan_list)),'ports to scan per discovered host')                
 
         for count, discovered_ip in enumerate(self.discovered[str(network_to_scan)]['discovered_hosts_details']):       
 
