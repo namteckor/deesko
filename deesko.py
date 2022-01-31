@@ -15,8 +15,8 @@ host = core.system()
 
 argv = sys.argv[1:]
 
-short_options = 'd:P:At:s:c:p:o:lv' 
-long_options =  ['discover=','Ports=','Active-OS-Fingerprinting','timeout=','sweeps=','count=','port=','output=','lookup','verbose']
+short_options = 'd:P:Aat:s:c:p:o:lv' 
+long_options =  ['discover=','Ports=','Active-OS-Fingerprinting','active-os-fingerprinting','timeout=','sweeps=','count=','port=','output=','lookup','verbose']
 
 try:
     opts, args = getopt.getopt(argv,short_options,long_options)
@@ -24,7 +24,8 @@ except getopt.error as err:
     print('ERROR!')
     print('Usage: deesko.py -d <IP address, or CIDR range, or local interface name>')
     print('\t'+'-P <string of comma-separated ports, or range>')
-    print('\t'+'-A <to perform active OS fingerprinting on discovered live hosts using the load_module("nmap") utility, default False>')
+    print('\t'+'-A <to perform active OS fingerprinting on discovered live hosts using "nmap -O" (requires nmap), default False>')
+    #print('\t'+'-a <to perform active OS fingerprinting on discovered live hosts using the scapy load_module("nmap") utility (UNRELIABLE), default False>')
     print('\t'+'-o <full path to output file for the downloaded scan report in .json format, default False (no report)>')
     print('\t'+'-t <timeout (optional, default 1s)>')
     print('\t'+'-s <ping sweep types, default "icmp">')
@@ -45,7 +46,8 @@ if ('-d' not in list_of_options_passed) and ('--discover' not in list_of_options
     print('')
     print('Usage: deesko.py -d <IP address, or CIDR range, or local interface name>')
     print('\t'+'-P <string of comma-separated ports, or range>')
-    print('\t'+'-A <to perform active OS fingerprinting on discovered live hosts using the load_module("nmap") utility, default False>')
+    print('\t'+'-A <to perform active OS fingerprinting on discovered live hosts using "nmap -O" (requires nmap), default False>')
+    #print('\t'+'-a <to perform active OS fingerprinting on discovered live hosts using the scapy load_module("nmap") utility (UNRELIABLE), default False>')
     print('\t'+'-o <full path to output file for the downloaded scan report in .json format, default False (no report)>')
     print('\t'+'-t <timeout (optional, default 1s)>')
     print('\t'+'-s <ping sweep types, default "icmp">')
@@ -101,7 +103,8 @@ for opt, arg in opts:
         print('ERROR!')
         print('Usage: deesko.py -d <IP address, or CIDR range, or local interface name>')
         print('\t'+'-P <string of comma-separated ports, or range>')
-        print('\t'+'-A <to perform active OS fingerprinting on discovered live hosts using the load_module("nmap") utility, default False>')
+        print('\t'+'-A <to perform active OS fingerprinting on discovered live hosts using "nmap -O" (requires nmap), default False>')
+        #print('\t'+'-a <to perform active OS fingerprinting on discovered live hosts using the scapy load_module("nmap") utility (UNRELIABLE), default False>')
         print('\t'+'-o <full path to output file for the downloaded scan report in .json format, default False (no report)>')
         print('\t'+'-t <timeout (optional, default 1s)>')
         print('\t'+'-s <ping sweep types, default "icmp">')

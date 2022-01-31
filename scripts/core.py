@@ -1,7 +1,7 @@
-import os, platform, ipaddress, json, datetime, requests
+import os, platform, ipaddress, json, datetime, requests, subprocess
 import scapy.all as scapy
 from colorama import Fore, Back, Style
-#import csv, subprocess, shutil
+#import csv, shutil
 
 disko_root_dir = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 path_to_oui_csv = os.path.join(os.path.join(disko_root_dir,'other'),'oui.csv')
@@ -575,6 +575,23 @@ class system:
         rv = nmap_fp(target_ip_str,oport=443,cport=1)
         return rv
     
+    def run_nmap_os_discovery(self,target_ip_str):
+        rv = None
+        if self.system == 'Windows':
+            nmap_command = 'nmap -Pn -O '+str(target_ip_str)
+        elif self.system == 'Linux':
+            nmap_command = 'sudo nmap -Pn -O '+str(target_ip_str)
+        else:
+            return rv
+        x = subprocess.check_output(nmap_command,shell=True)
+        x_str = x.decode("utf-8")
+        for item in x_str.split("\n"):
+            if 'OS details:' in item:
+                print(Fore.GREEN+'\t\t[INFO] '+item.strip()+' ('+str(target_ip_str)+')')
+                print(Style.RESET_ALL)
+                rv = item.strip()
+        return rv
+
     def discover(self, option, tcp_ports_to_scan=None, active_os_fingerprinting=False, timeout_seconds=1, ping_sweeps='icmp', ping_count=1, tcp_udp_port=443, oui_lookup=False, output=None, verbose=False):
         
         # option shall be either an existing host interface name with IPv4 address or a network in CIDR notation, entered as string, ex: 'eth0'
@@ -814,9 +831,10 @@ class system:
         print('')
         
         if active_os_fingerprinting:
-            scapy.load_module('nmap')
+            print('\t[INFO] OS fingerprinting attempt will be made on discovered live hosts...')
+            #scapy.load_module('nmap')
             #print('\t[DEBUG] scapy.conf.nmap_base', scapy.conf.nmap_base)
-            load_nmap_os_fingerprints()
+            #load_nmap_os_fingerprints()
             #print('\t[DEBUG] scapy.conf.nmap_base', scapy.conf.nmap_base)
             #scapy.load_module('p0f')
             #print('\t[DEBUG] scapy.conf.p0f_base', scapy.conf.p0f_base)
@@ -834,10 +852,11 @@ class system:
             self.discovered[str(network_to_scan)]['discovered_hosts_count'] += 1
             
             if active_os_fingerprinting:
-                test_os = self.run_nmap_os_fingerprint(str(discovered_ip))
+                #test_os = self.run_nmap_os_fingerprint(str(discovered_ip))
+                test_os = self.run_nmap_os_discovery(str(discovered_ip))
                 #print('\t[DEBUG]',test_os)
-                self.discovered[str(network_to_scan)]['discovered_hosts_summary'][discovered_ip] = {'scapy-nmap_fp': str(test_os)}
-                self.discovered[str(network_to_scan)]['discovered_hosts_details'][discovered_ip]['os'] = {'scapy-nmap_fp': str(test_os)}
+                self.discovered[str(network_to_scan)]['discovered_hosts_summary'][discovered_ip] = {'nmap': str(test_os)}
+                self.discovered[str(network_to_scan)]['discovered_hosts_details'][discovered_ip]['os'] = {'nmap': str(test_os)}
 
         # if the -o switch was given, then export the results
         if output is not None:
