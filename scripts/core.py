@@ -583,11 +583,20 @@ class system:
             nmap_command = 'sudo nmap -Pn -O '+str(target_ip_str)
         else:
             return rv
+        print('\t\t[INFO] '+'Performing system command: '+nmap_command)
         x = subprocess.check_output(nmap_command,shell=True)
         x_str = x.decode("utf-8")
         for item in x_str.split("\n"):
             if 'OS details:' in item:
-                print(Fore.GREEN+'\t\t[INFO] '+item.strip()+' ('+str(target_ip_str)+')')
+                print(Fore.GREEN+'\t\t\t[INFO] '+item.strip()+' ('+str(target_ip_str)+')')
+                print(Style.RESET_ALL)
+                rv = item.strip()
+            elif 'Aggressive OS guesses:' in item:
+                print(Fore.GREEN+'\t\t\t[INFO] '+item.strip()+' ('+str(target_ip_str)+')')
+                print(Style.RESET_ALL)
+                rv = item.strip()
+            elif 'No exact OS matches for host' in item:
+                print(Fore.YELLOW+'\t\t\t[INFO] '+item.strip()+' ('+str(target_ip_str)+')')
                 print(Style.RESET_ALL)
                 rv = item.strip()
         return rv
