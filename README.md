@@ -39,7 +39,7 @@ Below is an example of using the -o output switch ("scan_results.json"), this wa
         &ensp;&ensp;&ensp;&ensp;"192.168.0.100": {  
             &ensp;&ensp;&ensp;&ensp;&ensp;"ipv4_address": "192.168.0.100",  
             &ensp;&ensp;&ensp;&ensp;&ensp;"os": {  
-              &ensp;&ensp;&ensp;&ensp;&ensp;&ensp;"nmap": "OS details: Linux 2.6.9 - 2.6.33  
+              &ensp;&ensp;&ensp;&ensp;&ensp;&ensp;"nmap": "OS details: Linux 2.6.9 - 2.6.33"  
             &ensp;&ensp;&ensp;&ensp;&ensp;},   
             &ensp;&ensp;&ensp;&ensp;&ensp;"mac_address": "00:00:00:00:00:00",  
             &ensp;&ensp;&ensp;&ensp;&ensp;"oui_vendor": "Vendor Name",  
