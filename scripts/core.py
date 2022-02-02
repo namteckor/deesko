@@ -591,10 +591,12 @@ class system:
                 print(Fore.GREEN+'\t\t\t[INFO] '+item.strip()+' ('+str(target_ip_str)+')')
                 print(Style.RESET_ALL)
                 rv = item.strip()
+                return rv
             elif 'Aggressive OS guesses:' in item:
                 print(Fore.GREEN+'\t\t\t[INFO] '+item.strip()+' ('+str(target_ip_str)+')')
                 print(Style.RESET_ALL)
                 rv = item.strip()
+                return rv
             elif 'No exact OS matches for host' in item:
                 print(Fore.YELLOW+'\t\t\t[INFO] '+item.strip()+' ('+str(target_ip_str)+')')
                 print(Style.RESET_ALL)
@@ -864,8 +866,8 @@ class system:
                 #test_os = self.run_nmap_os_fingerprint(str(discovered_ip))
                 test_os = self.run_nmap_os_discovery(str(discovered_ip))
                 #print('\t[DEBUG]',test_os)
-                self.discovered[str(network_to_scan)]['discovered_hosts_summary'][discovered_ip] = {'nmap': str(test_os)}
-                self.discovered[str(network_to_scan)]['discovered_hosts_details'][discovered_ip]['os'] = {'nmap': str(test_os)}
+                self.discovered[str(network_to_scan)]['discovered_hosts_summary'][discovered_ip] = {'nmap -O': str(test_os)}
+                self.discovered[str(network_to_scan)]['discovered_hosts_details'][discovered_ip]['os'] = {'nmap -O': str(test_os)}
 
         # if the -o switch was given, then export the results
         if output is not None:
