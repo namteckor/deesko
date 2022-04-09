@@ -2,10 +2,12 @@
 "deesko" is a prototype Python script to automate initial network discovery (mostly relying on Scapy).  
 **Only use for educational purposes on networks that you own and have explicit authorization to scan!**  
 
-Its goal is **not** to replace nmap or rustscan, just to showcase what can be done with Scapy in terms of "network discovery automation".  
+Its goal is **not** to replace nmap or rustscan, just to showcase what can be done with Scapy in terms of "network discovery automation" and offer an alternative tool for network scanning.  
 
-Usage:
+## Disclaimer  
+Users take full responsibility for any actions performed using this tool. The author accepts no liability for damage caused by this tool. If these terms are not acceptable to you, then do not use this tool.  
 
+## Usage  
 &ensp;sudo path/to/deesko.py -d <IP address, or CIDR range, or local interface name>  
   &ensp;&ensp;-P <list of TCP ports to stealthily scan on discovered hosts, default "21-23,53,80,389,443,502,636,990,3306,3389,5432,8080">  
   &ensp;&ensp;-A <to perform active OS fingerprinting on discovered live hosts using "nmap -O" (requires nmap), default False>  
@@ -17,6 +19,7 @@ Usage:
   &ensp;&ensp;-l <to perform OUI MAC address lookup, default False>  
   &ensp;&ensp;-v <to be verbose and show "Closed" and "Filtered" ports, default False>  
 
+## Examples  
 Ex1: sudo ./deesko.py -d 192.168.0.0/25  
 Ex2: sudo ./deesko.py -d eth1 -P 21-23,53,80,443 -o scan_results.json -t 2 -s "icmp,tcp" -c 4 -p 80 -l -v   
 
