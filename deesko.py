@@ -3,6 +3,19 @@
 import sys, getopt, os, datetime
 from scripts import core
 
+def print_help():
+    print('Usage:')
+    print('\t'+'deesko.py -d <IP address, or CIDR range, or local interface name>')
+    print('\t\t'+'-P <string of comma-separated ports, or range>')
+    print('\t\t'+'-A <to perform active OS fingerprinting on discovered live hosts using "nmap -O" (requires nmap), default False>')    
+    print('\t\t'+'-o <full path to output file for the downloaded scan report in .json format, default False (no report)>')
+    print('\t\t'+'-t <timeout (optional, default 1s)>')
+    print('\t\t'+'-s <ping sweep types, default "icmp">')
+    print('\t\t'+'-c <ping count, default 1>')
+    print('\t\t'+'-p <TCP port used for TCP ping sweep, default 443>')
+    print('\t\t'+'-l <to perform OUI lookup, default False>')
+    print('\t\t'+'-v <to be verbose and show "Closed" and "Filtered" ports, default False>')
+
 time_format = '%Y-%m-%d %H:%M:%S%z'
 
 start_local = datetime.datetime.now().astimezone()
@@ -22,17 +35,7 @@ try:
     opts, args = getopt.getopt(argv,short_options,long_options)
 except getopt.error as err:
     print('ERROR!')
-    print('Usage: deesko.py -d <IP address, or CIDR range, or local interface name>')
-    print('\t'+'-P <string of comma-separated ports, or range>')
-    print('\t'+'-A <to perform active OS fingerprinting on discovered live hosts using "nmap -O" (requires nmap), default False>')
-    #print('\t'+'-a <to perform active OS fingerprinting on discovered live hosts using the scapy load_module("nmap") utility (UNRELIABLE), default False>')
-    print('\t'+'-o <full path to output file for the downloaded scan report in .json format, default False (no report)>')
-    print('\t'+'-t <timeout (optional, default 1s)>')
-    print('\t'+'-s <ping sweep types, default "icmp">')
-    print('\t'+'-c <ping count, default 1>')
-    print('\t'+'-p <TCP port used for TCP ping sweep, default 443>')
-    print('\t'+'-l <to perform OUI lookup, default False>')
-    print('\t'+'-v <to be verbose and show "Closed" and "Filtered" ports, default False>')
+    print_help()
     print(str(err))
     sys.exit()
 
@@ -44,17 +47,7 @@ if ('-d' not in list_of_options_passed) and ('--discover' not in list_of_options
     print('ERROR!')
     print('Missing required argument -d or --discover <10.0.0.0/24 or interface name>')
     print('')
-    print('Usage: deesko.py -d <IP address, or CIDR range, or local interface name>')
-    print('\t'+'-P <string of comma-separated ports, or range>')
-    print('\t'+'-A <to perform active OS fingerprinting on discovered live hosts using "nmap -O" (requires nmap), default False>')
-    #print('\t'+'-a <to perform active OS fingerprinting on discovered live hosts using the scapy load_module("nmap") utility (UNRELIABLE), default False>')
-    print('\t'+'-o <full path to output file for the downloaded scan report in .json format, default False (no report)>')
-    print('\t'+'-t <timeout (optional, default 1s)>')
-    print('\t'+'-s <ping sweep types, default "icmp">')
-    print('\t'+'-c <ping count, default 1>')
-    print('\t'+'-p <TCP port used for TCP ping sweep, default 443>')
-    print('\t'+'-l <to perform OUI lookup, default False>')
-    print('\t'+'-v <to be verbose and show "Closed" and "Filtered" ports, default False>')
+    print_help()
     print('')
     print('Local interface options to scan a local/directly-connected network:')
     print('\t'+'+-----------------------------------------------+-----------------------+')
@@ -101,17 +94,7 @@ for opt, arg in opts:
         be_verbose = True
     else:
         print('ERROR!')
-        print('Usage: deesko.py -d <IP address, or CIDR range, or local interface name>')
-        print('\t'+'-P <string of comma-separated ports, or range>')
-        print('\t'+'-A <to perform active OS fingerprinting on discovered live hosts using "nmap -O" (requires nmap), default False>')
-        #print('\t'+'-a <to perform active OS fingerprinting on discovered live hosts using the scapy load_module("nmap") utility (UNRELIABLE), default False>')
-        print('\t'+'-o <full path to output file for the downloaded scan report in .json format, default False (no report)>')
-        print('\t'+'-t <timeout (optional, default 1s)>')
-        print('\t'+'-s <ping sweep types, default "icmp">')
-        print('\t'+'-c <ping count, default 1>')
-        print('\t'+'-p <TCP port used for TCP ping sweep, default 443>')
-        print('\t'+'-l <to perform OUI lookup, default False>')
-        print('\t'+'-v <to be verbose and show "Closed" and "Filtered" ports, default False>')
+        print_help()
         sys.exit()
 
 #print('target_to_discover',target_to_discover)
