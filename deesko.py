@@ -5,7 +5,7 @@ from scripts import core
 
 def print_help():
     print('Usage:')
-    print('\t'+'deesko.py -d <IP address, or CIDR range, or local interface name>')
+    print('\t'+'sudo path/to/deesko.py -d <IP address, or CIDR range, or local interface name>')
     print('\t\t'+'-P <string of comma-separated ports, or range>')
     print('\t\t'+'-A <to perform active OS fingerprinting on discovered live hosts using "nmap -O" (requires nmap), default False>')    
     print('\t\t'+'-o <full path to output file for the downloaded scan report in .json format, default False (no report)>')
