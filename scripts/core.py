@@ -369,7 +369,7 @@ class system:
         self.discovered = {}
         # Parse and load an OUI lookup dictionary content in memory for re-use and multiple lookup
         self.oui_lookup_dictionary = load_oui_csv() #load_oui_txt()
-        self.default_tcp_ports = '21-23,53,80,139,389,443,445,502,636,990,3306,3389,5432,8080'
+        self.default_tcp_ports = '21-23,53,80,88,139,389,443,445,502,636,990,3306,3389,5432,8080'
             
     def ip_config(self):
         if self.system == 'Windows':
