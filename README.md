@@ -95,3 +95,7 @@ Below is an example of using the -o output switch ("scan_results.json"), this wa
     }  
 }  
 ```
+Sample output:  
+![Alt text](../assets/deesko_run_on_metasploitable_2.png?raw=true "deesko command example")
+
+![Alt text](../assets/deesko_on_metasploitable_2.png?raw=true "deesko sample output")
